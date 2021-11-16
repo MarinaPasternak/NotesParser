@@ -19,7 +19,7 @@ import frequencyData from './notesfrequency.js'
             notes.push(note);
 
             if (fraction.includes('.')) {
-                duration.push(1 / fraction * 1,5);
+                duration.push((1 / fraction) * 1,5);
             } else {
                 duration.push(1 / fraction);
             }
@@ -34,10 +34,35 @@ import frequencyData from './notesfrequency.js'
             }
         });        
     }
-    
+
+    function createSoundOfNote(frequencyValue, durationValue) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        let prevTime = 0;
+        audioCtx.resume().then(function() {
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(frequencyValue, audioCtx.currentTime); // value in hertz
+            oscillator.connect(audioCtx.destination);
+            oscillator.start(prevTime);
+            if (durationValue >= 1) {
+                oscillator.stop(durationValue);
+                prevTime = audioCtx.currentTime + durationValue;
+            }  else {
+                oscillator.stop(durationValue * 10);
+                prevTime = audioCtx.currentTime + durationValue*10;
+            } 
+        });
+    }
+
     function workOnLoad() {
         siparateNotesAndDuration();
         createFrequencyArray();
+
+        document.getElementById('start').onclick = function() {
+            for (let i = 0; i < frequency.length; i++) {
+                createSoundOfNote(frequency[i], duration[i]);
+            }
+        };
     }
 
     document.addEventListener('DOMContentLoaded', workOnLoad);
