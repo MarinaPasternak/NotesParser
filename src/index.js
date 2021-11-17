@@ -2,15 +2,27 @@ import frequencyData from './notesfrequency.js'
 
 (function() {
     let notes = [];
-    let duration = [];
-    let frequency = [];
-    const inputNotesText = document.getElementById('inputNotesText').value;
+    let durationAndFrequency = [];
+    let inputNotesText = document.getElementById('inputNotesText').value.trim();
+    
+    const buttonPlayMusic = document.getElementById('startPlayMusic');
+    const buttonPauseMusic = document.getElementById('pausePlayMusic');
+    const buttonStopMusic = document.getElementById('stopPlayMusic');
+
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function getInputText() {
+        inputNotesText = document.getElementById('inputNotesText').value.trim();
+        siparateNotesAndDuration()
+    }
 
     function splitNote(note) {
         return note.split('/');
     }
 
     function siparateNotesAndDuration() {
+        notes = [];
+        durationAndFrequency = [];
         let notesWithDuration = inputNotesText.split(' ');
         
         notesWithDuration.forEach( (currentNote) => {
@@ -19,49 +31,95 @@ import frequencyData from './notesfrequency.js'
             notes.push(note);
 
             if (fraction.includes('.')) {
-                duration.push((1 / fraction) * 1,5);
+                if (frequencyData.hasOwnProperty(note)) {
+                    durationAndFrequency.push({ 
+                        'duration': (1 / fraction * 1,5),
+                        'frequency': frequencyData[note]
+                    });
+                }
             } else {
-                duration.push(1 / fraction);
+                if (frequencyData.hasOwnProperty(note)) {
+                    durationAndFrequency.push({ 
+                        'duration': 1 / fraction,
+                        'frequency': frequencyData[note]
+                    });
+                }
             }
-            
         });
     }
 
-    function createFrequencyArray() {
-        notes.forEach( (currentNote) => {
-            if (frequencyData.hasOwnProperty(currentNote)) {
-                frequency.push(frequencyData[currentNote]);
-            }
-        });        
-    }
 
     function createSoundOfNote(frequencyValue, durationValue) {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        let prevTime = 0;
-        audioCtx.resume().then(function() {
-            oscillator.type = 'square';
+        return new Promise( (resolve, reject) => {
+            const oscillator = audioCtx.createOscillator();
+            oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(frequencyValue, audioCtx.currentTime); // value in hertz
             oscillator.connect(audioCtx.destination);
-            oscillator.start(prevTime);
-            if (durationValue >= 1) {
-                oscillator.stop(durationValue);
-                prevTime = audioCtx.currentTime + durationValue;
-            }  else {
-                oscillator.stop(durationValue * 10);
-                prevTime = audioCtx.currentTime + durationValue*10;
-            } 
+            oscillator.start();
+            let duration = durationValue >= 1 ? durationValue: durationValue * 2000;
+
+            if (buttonPlayMusic.getAttribute('doesItNeedToCountinuePlay') === 'false') {
+                oscillator.stop();
+            } else {
+                setTimeout(() => {
+                    oscillator.stop(0);
+                    resolve();
+                }, duration);
+            }
         });
+    }
+
+    function makeButtonDisabled(btn) {
+        btn.setAttribute('disabled', true);
+    }
+
+    function makeButtonActive(btn) {
+        btn.removeAttribute('disabled');
     }
 
     function workOnLoad() {
         siparateNotesAndDuration();
-        createFrequencyArray();
 
-        document.getElementById('startPlayMusic').onclick = function() {
-            for (let i = 0; i < frequency.length; i++) {
-                createSoundOfNote(frequency[i], duration[i]);
+        
+        let iteratorNotes = durationAndFrequency[Symbol.iterator]();
+
+        buttonPlayMusic.onclick = async function() {
+            makeButtonDisabled(this);
+            makeButtonActive(buttonPauseMusic);
+            makeButtonActive(buttonStopMusic);
+
+            getInputText();
+
+            this.setAttribute('doesItNeedToCountinuePlay', true);
+
+            let notesIteretion = iteratorNotes.next();
+
+            while(!notesIteretion.done) {
+                if (this.getAttribute('doesItNeedToCountinuePlay') === 'true') {
+                    await createSoundOfNote(notesIteretion.value.frequency, notesIteretion.value.duration);
+                    notesIteretion = iteratorNotes.next();
+                } else {
+                    break;
+                }
             }
+            makeButtonActive(this);
+            makeButtonDisabled(buttonPauseMusic);
+            makeButtonDisabled(buttonStopMusic);
+        };
+
+        buttonStopMusic.onclick = function() {
+            buttonPlayMusic.setAttribute('doesItNeedToCountinuePlay', false);
+            makeButtonDisabled(buttonStopMusic);
+            makeButtonActive(buttonPauseMusic);
+            makeButtonActive(buttonPlayMusic);
+        };
+
+        buttonPauseMusic.onclick = function() {
+
+            buttonPlayMusic.setAttribute('doesItNeedToCountinuePlay', false);
+            makeButtonDisabled(buttonPauseMusic);
+            makeButtonActive(buttonStopMusic);
+            makeButtonActive(buttonPlayMusic);
         };
     }
 
