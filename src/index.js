@@ -94,14 +94,15 @@ import frequencyData from './notesfrequency.js'
 
             let notesIteretion = iteratorNotes.next();
 
-            while(!notesIteretion.done) {
-                if (this.getAttribute('doesItNeedToCountinuePlay') === 'true') {
+            while(true) {
+                if (this.getAttribute('doesItNeedToCountinuePlay') === 'true' && !notesIteretion.done) {
                     await createSoundOfNote(notesIteretion.value.frequency, notesIteretion.value.duration);
                     notesIteretion = iteratorNotes.next();
                 } else {
                     break;
                 }
             }
+            
             makeButtonActive(this);
             makeButtonDisabled(buttonPauseMusic);
             makeButtonDisabled(buttonStopMusic);
