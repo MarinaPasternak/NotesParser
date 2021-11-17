@@ -58,7 +58,7 @@ import frequencyData from './notesfrequency.js'
         siparateNotesAndDuration();
         createFrequencyArray();
 
-        document.getElementById('start').onclick = function() {
+        document.getElementById('startPlayMusic').onclick = function() {
             for (let i = 0; i < frequency.length; i++) {
                 createSoundOfNote(frequency[i], duration[i]);
             }

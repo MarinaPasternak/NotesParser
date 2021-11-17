@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+#app {
+    position: relative;
+    width: 600px;
+    height: 250px;
+    margin: auto;
+    margin-top: 10%;
+    padding-top: 10px;
+    background-color: aliceblue;
+}
+
+#app h2 {
+    text-align: center;
+}
+
+.btn-group button {
+    width: fit-content;
+    margin: auto;
+    padding: 7px 25px;
+    font-weight: 600;
+}
+
+#inputNotesText {
+    resize:none
+}
