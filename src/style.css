@@ -28,3 +28,7 @@ body {
 #inputNotesText {
     resize:none
 }
+
+.higlited {
+    background-color: aquamarine;
+}
